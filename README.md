@@ -10,12 +10,12 @@ run as a process that can be interfaced via REST.
 
 # Features
 
-[*] Save arbitrary data to the database (the ledger).
-[*] Stores transaction history as a block chain.
-[*] Block chain ledger can be verified by the block chain.
-[*] Persists the ledger to the disk after each transaction (as a json file).
-[*] RESTful API for viewing and updating the block chain.
-[*] Can syncrhonize between two separate block chain instances to act as a network.
+* Save arbitrary data to the database (the ledger).
+* Stores transaction history as a block chain.
+* Block chain ledger can be verified by the block chain.
+* Persists the ledger to the disk after each transaction (as a json file).
+* RESTful API for viewing and updating the block chain.
+* Can syncrhonize between two separate block chain instances to act as a network.
 
 # Missing Features
 
