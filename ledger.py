@@ -67,22 +67,46 @@ class Ledger(object):
         f.write(json_ledger)
         f.close()
 
-    def update_ledger(self, key, input_value):
+    def update(self, key, input_value):
         '''
         Runs the key and input_value into the chaincode function, and
         sets the ledger key to the output.
 
         Also updates the block chain and persists to the file.
         '''
+        block = self.create_block(key, input_value)
+        self.write_block_to_ledger(block)
+
+    def write_block_to_ledger(self, block):
+        '''
+        Given a block, write its key/value to the ledger, add to the
+        block chain, and persist to disk.
+        '''
+        self.values[block.key] = block.output
+        self.blockchain.append(block)
+        self.write_ledger(self.ledger_file)
+
+    def create_block(self, key, input_value):
+        '''
+        Creates a block based on the key, input value, and current block chain.
+        '''
         output = self.exec_chaincode(key, input_value)
         block = Block(self.current_block, key, input_value, output)
-        self.blockchain.append(block)
-        self.values[key] = output
-        self.write_ledger(self.ledger_file)
+        return block
 
     def exec_chaincode(self, key, input_value):
         output = self.chaincode(key, input_value)
         return output
+
+    def add_dict_block(self, new_block):
+        '''
+        Given a block as a dict add it to the current block chain.
+
+        Asserts that the block is valid.
+        '''
+        block = self.create_block(new_block['key'], new_block['input'])
+        assert block.hash == new_block['hash'], 'Invalid block. Cannot add to block chain.'
+        self.write_block_to_ledger(block)
 
     def blockchain_to_json(self):
         blocks = [block.create_dict() for block in self.blockchain]
@@ -117,15 +141,15 @@ class Block(object):
             "key": self.key,
             "output": self.output
             }
-       
+
     def __repr__(self):
         return str(self.create_dict())
 
 
 if __name__ == '__main__':
     ledger = Ledger(LEDGER_FILE)
-    ledger.update_ledger('hello', 'world')
-    ledger.update_ledger('hello', 'foo')
-    ledger.update_ledger('hello', 'you')
+    ledger.update('hello', 'world')
+    ledger.update('hello', 'foo')
+    ledger.update('hello', 'you')
     print ledger.blockchain_to_json()
     print ledger.values

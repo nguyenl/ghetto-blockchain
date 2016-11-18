@@ -1,6 +1,8 @@
 from flask import Flask
-from flask import render_template
+from flask import render_template, request
 import click
+import requests
+import json
 from ledger import Ledger
 
 app = Flask(__name__)
@@ -24,13 +26,47 @@ def start_peer(port, name, peer_address):
 
 @app.route("/")
 def index():
+    '''
+    Displays the state of the key/value ledger.
+    '''
     return render_template('index.html', ledger=ledger.values, name=peername)
 
 
 @app.route("/blockchain")
 def blockchain():
+    '''
+    Display the entire block chain as an html file.
+    '''
     template = render_template('blockchain.html', blockchain=ledger.blockchain, name=peername)
     return template
+
+
+@app.route("/invoke", methods=['POST'])
+def invoke():
+    '''
+    Invokes the chaincode to modify the ledger.
+    Creates a new block in the process, and adds that block if there
+    is a peer.
+    '''
+    key = request.form['key']
+    input_value = request.form['input']
+    ledger.update(key, input_value)
+    return str(ledger.current_block)
+
+
+@app.route("/add_block", methods=['POST'])
+def add_block():
+    '''
+    Adds a block to the ledger from another peer.
+
+    Returns 500 if the block is not valid.
+    '''
+    json_block = json.loads(request.get_data())
+    try:
+        ledger.add_dict_block(json_block)
+        return str(ledger.current_block)
+    except Exception as e:
+        return str(e)
 
 
 if __name__ == '__main__':

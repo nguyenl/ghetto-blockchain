@@ -8,6 +8,8 @@ features.
 The ledger itself can be used as a python library module, or it can be
 run as a process that can be interfaced via REST.
 
+Be warned, I wanted to create this in a single work day, so it's not the prettiest code.
+
 # Features
 
 * Save arbitrary data to the database (the ledger).
@@ -24,3 +26,4 @@ run as a process that can be interfaced via REST.
 * No security implmenetations
  * Traffic not encrypted
  * Identify of peers not secure
+
