@@ -19,8 +19,10 @@ def start_peer(port, name, peer_address):
     ledger_filename = "{}.json".format(name)
     global ledger
     global peername
+    global peers
     peername = name
     ledger = Ledger(ledger_filename)
+    peers = [peer_address]
     app.run(host='0.0.0.0', port=port, debug=True)
 
 
@@ -50,8 +52,14 @@ def invoke():
     '''
     key = request.form['key']
     input_value = request.form['input']
-    ledger.update(key, input_value)
-    return str(ledger.current_block)
+    block = ledger.update(key, input_value)
+    try:
+        if peers:
+            send_peers('add_block', block.to_json())
+    except Exception as e:
+        print str(e)
+
+    return str(block)
 
 
 @app.route("/add_block", methods=['POST'])
@@ -67,6 +75,23 @@ def add_block():
         return str(ledger.current_block)
     except Exception as e:
         return str(e)
+
+
+def send_peers(endpoint, payload):
+    '''
+    A helper function to POST an arbitrary payload to other peers on
+    the network.
+    '''
+    responses = []
+    for peer in peers:
+        try:
+            url = "{}/{}".format(peer, endpoint)
+            print url
+            r = requests.post(url, data=payload)
+            responses.append(r)
+        except Exception as e:
+            print 'Exception: Unable to post to peer {}: {}'.format(str(e))
+    return responses
 
 
 if __name__ == '__main__':

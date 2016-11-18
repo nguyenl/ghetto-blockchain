@@ -73,9 +73,12 @@ class Ledger(object):
         sets the ledger key to the output.
 
         Also updates the block chain and persists to the file.
+
+        Returns the newly added block.
         '''
         block = self.create_block(key, input_value)
         self.write_block_to_ledger(block)
+        return block
 
     def write_block_to_ledger(self, block):
         '''
@@ -141,6 +144,9 @@ class Block(object):
             "key": self.key,
             "output": self.output
             }
+
+    def to_json(self):
+        return json.dumps(self.create_dict())
 
     def __repr__(self):
         return str(self.create_dict())
