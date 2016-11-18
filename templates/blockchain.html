@@ -1,0 +1,21 @@
+<html>
+  <head>
+    <title>View BlockChain</title>
+  </head>
+  <body>
+    <h1>BlockChain for {{ name }}</h1>
+
+    <table border=1>
+      <tr>
+        <th>id</th><th>key</th><th>output</th>
+      </tr>
+      {% for block in blockchain %}
+      <tr>
+        <td>{{ block.hash }}</td>
+        <td>{{ block.key }}</td>
+        <td>{{ block.output }}</td>
+      </tr>
+      {% endfor %}
+    </ul>
+  </body>
+</html>

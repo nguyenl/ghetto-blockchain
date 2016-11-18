@@ -3,17 +3,23 @@ import json
 
 
 HASHER = hashlib.sha256()
-
-
 LEDGER_FILE = 'ledger.json'
 
 
+def simple_chaincode(key, input_value):
+    '''
+    A default simple chaincode function that sets the output value as
+    the input value.
+    '''
+    return input_value
+
+
 class Ledger(object):
-    def __init__(self, ledger_file, chaincode):
+    def __init__(self, ledger_file, chaincode=None):
         self.values = {}
-        self.blocks = []
+        self.blockchain = []
         self.ledger_file = ledger_file
-        self.chaincode = chaincode
+        self.chaincode = simple_chaincode if chaincode is None else chaincode
         if self.ledger_file is not None:
             self.load_ledger(ledger_file)
 
@@ -46,7 +52,7 @@ class Ledger(object):
             assert new_block['hash'] == block.hash, "Block chain hash not equal. Corrupt ledger! Invalid block hash: {}".format(new_block.hash)
 
             # Append to the block chain
-            self.blocks.append(block)
+            self.blockchain.append(block)
 
             # Set the new ledger value
             self.values[block.key] = block.output
@@ -56,7 +62,7 @@ class Ledger(object):
         Writes this ledger into the given filename.
         Saves the ledger as a json object.
         '''
-        json_ledger = self.to_json()
+        json_ledger = self.blockchain_to_json()
         f = open(filename, 'w')
         f.write(json_ledger)
         f.close()
@@ -70,7 +76,7 @@ class Ledger(object):
         '''
         output = self.exec_chaincode(key, input_value)
         block = Block(self.current_block, key, input_value, output)
-        self.blocks.append(block)
+        self.blockchain.append(block)
         self.values[key] = output
         self.write_ledger(self.ledger_file)
 
@@ -78,13 +84,13 @@ class Ledger(object):
         output = self.chaincode(key, input_value)
         return output
 
-    def to_json(self):
-        blocks = [block.create_dict() for block in self.blocks]
+    def blockchain_to_json(self):
+        blocks = [block.create_dict() for block in self.blockchain]
         return json.dumps(blocks, indent=4)
 
     @property
     def current_block(self):
-        return self.blocks[-1] if len(self.blocks) else None
+        return self.blockchain[-1] if len(self.blockchain) else None
 
 
 class Block(object):
@@ -116,14 +122,10 @@ class Block(object):
         return str(self.create_dict())
 
 
-def chaincode(key, value):
-    return value
-
-
 if __name__ == '__main__':
-    ledger = Ledger(LEDGER_FILE, chaincode)
+    ledger = Ledger(LEDGER_FILE)
     ledger.update_ledger('hello', 'world')
     ledger.update_ledger('hello', 'foo')
     ledger.update_ledger('hello', 'you')
-    print ledger.to_json()
+    print ledger.blockchain_to_json()
     print ledger.values
