@@ -5,6 +5,7 @@ import requests
 import json
 from ledger import Ledger
 
+
 app = Flask(__name__)
 
 
@@ -32,6 +33,14 @@ def index():
     Displays the state of the key/value ledger.
     '''
     return render_template('index.html', ledger=ledger.values, name=peername)
+
+
+@app.route("/ledger.json")
+def ledger_json():
+    '''
+    Returns the ledger as a json document.
+    '''
+    return json.dumps(ledger.values)
 
 
 @app.route("/blockchain")

@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block body %}
+<table class="table table-bordered">
+  <thead>
+      <tr>
+        <th>ACID</th>
+        <th>Flight State</th>
+        <th></th>
+        <th></th>
+      </tr>
+  </thead>
+  <tbody>
+    {% for key,value in ledger.iteritems() %}
+    <tr>
+      <td>{{ key }}</td>
+      <td>{{ value }}</td>
+      <td>
+        <form action="activate" method="post">
+          <input type="hidden" name="ACID" value="{{ key }}">
+          <input class="btn btn-primary" type="submit" name="ACTIVATE" value="ACTIVATE">
+        </form>
+      </td>
+      <td>
+        <form action="close" method="post">
+          <input type="hidden" name="ACID" value="{{ key }}">
+          <input class="btn btn-primary" type="submit" name="CLOSE" value="CLOSE">
+        </form>        
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<form action="file" method="post">
+  <div class="input-group">
+    <input type="text" class="form-control" placeholder="ACID" name="ACID">
+    <input class="btn btn-success" type="submit" value="Create FlightPlan">
+  </div>
+</form>
+{% endblock %}
