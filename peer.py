@@ -3,10 +3,12 @@ from flask import render_template, request
 import click
 import requests
 import json
+import redis
 from ledger import Ledger
 
 
 app = Flask(__name__)
+
 
 
 @click.command()
@@ -22,21 +24,32 @@ def start_peer(port, name, peer_address):
 
 
 def start(name, peer_address):
-    ledger_filename = "{}.json".format(name)
-    global ledger
     global peername
     global peers
+    global redis_connection
     peername = name
-    ledger = Ledger(ledger_filename)
     peers = [peer_address]
+    redis_connection = redis.StrictRedis(host='localhost', port=6379, db=0)
     return app
     
+
+def get_ledger():
+    '''
+    Creates a new ledger object based on the blockchain stored in
+    redis.
+    '''
+    blockchain = read_from_redis()
+    ledger = Ledger()
+    ledger.load_blockchain(blockchain)
+    return ledger
+
 
 @app.route("/")
 def index():
     '''
     Displays the state of the key/value ledger.
     '''
+    ledger = get_ledger()
     return render_template('index.html',
                            ledger=ledger.values,
                            blockchain=ledger.blockchain,
@@ -48,6 +61,7 @@ def ledger_json():
     '''
     Returns the ledger as a json document.
     '''
+    ledger = get_ledger()
     return json.dumps(ledger.values)
 
 
@@ -56,6 +70,7 @@ def blockchain():
     '''
     Display the entire block chain as an html file.
     '''
+    ledger = get_ledger()
     template = render_template('blockchain.html', blockchain=ledger.blockchain, name=peername)
     return template
 
@@ -67,9 +82,11 @@ def invoke():
     Creates a new block in the process, and adds that block if there
     is a peer.
     '''
+    ledger = get_ledger()    
     key = request.form['key']
     input_value = request.form['input']
     block = ledger.update(key, input_value)
+    write_to_redis(ledger)    
     try:
         if peers:
             send_peers('add_block', block.to_json())
@@ -86,13 +103,34 @@ def add_block():
 
     Returns 500 if the block is not valid.
     '''
+    ledger = get_ledger()    
     json_block = json.loads(request.get_data())
     try:
         ledger.add_dict_block(json_block)
+        write_to_redis(ledger)
         return str(ledger.current_block)
     except Exception as e:
         return str(e)
 
+
+def read_from_redis():
+    '''
+    Returns the blockchain from redis.
+    '''
+    blockchain_json = redis_connection.get('blockchain')
+    if blockchain_json is not None:
+        return json.loads(blockchain_json)
+    else:
+        return []
+
+
+def write_to_redis(ledger):
+    '''
+    Given a ledger, write its blockchain to redis.
+    '''
+    blockchain_json = ledger.blockchain_to_json()
+    redis_connection.set('blockchain', blockchain_json)
+    
 
 def send_peers(endpoint, payload):
     '''

@@ -3,7 +3,11 @@ import json
 
 
 HASHER = hashlib.sha256()
-LEDGER_FILE = 'ledger.json'
+BLOCKCHAIN_FILE = 'blockchain.json'
+
+
+class InvalidBlockChainException(Exception):
+    pass
 
 
 def simple_chaincode(key, input_value):
@@ -15,15 +19,15 @@ def simple_chaincode(key, input_value):
 
 
 class Ledger(object):
-    def __init__(self, ledger_file, chaincode=None):
+    def __init__(self, blockchain_file=None, chaincode=None):
         self.values = {}
         self.blockchain = []
-        self.ledger_file = ledger_file
+        self.blockchain_file = blockchain_file
         self.chaincode = simple_chaincode if chaincode is None else chaincode
-        if self.ledger_file is not None:
-            self.load_ledger(ledger_file)
+        if self.blockchain_file is not None:
+            self.load_blockchain_file(blockchain_file)
 
-    def load_ledger(self, filename):
+    def load_blockchain_file(self, filename):
         '''
         Loads a saved ledger from the given filename.
 
@@ -31,17 +35,24 @@ class Ledger(object):
         '''
         try:
             f = open(filename, 'r')
-            json_ledger = f.read()
+            json_blockchain = f.read()
             f.close()
 
-            ledger = json.loads(json_ledger)
-        except:
-            print "Unable to load the ledger file {}. Continuing with empty ledger.".format(filename)
-            ledger = []
+            blockchain = json.loads(json_blockchain)
+            self.load_blockchain(blockchain)
+        except Exception as e:
+            print(str(e))
+            print "Unable to load the blockchain file {}. Continuing with empty ledger.".format(filename)
+            self.blockchain = []
+            self.ledger = {}
 
+    def load_blockchain(self, blockchain):
+        '''
+        Given an existing blockchain, load and validate it.
+        '''
         # Convert the json blocks to Block objects, also validate the
         # chain while iterating.
-        for new_block in ledger:
+        for new_block in blockchain:
             # Create the block
             block = Block(self.current_block,
                          new_block['key'],
@@ -49,7 +60,8 @@ class Ledger(object):
                          new_block['output'])
 
             # Verify block chain is valid.
-            assert new_block['hash'] == block.hash, "Block chain hash not equal. Corrupt ledger! Invalid block hash: {}".format(new_block.hash)
+            if new_block['hash'] != block.hash:
+                raise InvalidBlockChainException("Block chain hash not equal. Corrupt blockchain! Invalid block hash: {}".format(new_block['hash']))
 
             # Append to the block chain
             self.blockchain.append(block)
@@ -57,7 +69,9 @@ class Ledger(object):
             # Set the new ledger value
             self.values[block.key] = block.output
 
-    def write_ledger(self, filename):
+        print("Blockchain loaded and validated.")
+
+    def write_blockchain(self, filename):
         '''
         Writes this ledger into the given filename.
         Saves the ledger as a json object.
@@ -87,7 +101,8 @@ class Ledger(object):
         '''
         self.values[block.key] = block.output
         self.blockchain.append(block)
-        self.write_ledger(self.ledger_file)
+        if self.blockchain_file is not None:
+            self.write_blockchain(self.blockchain_file)
 
     def create_block(self, key, input_value):
         '''
@@ -153,9 +168,13 @@ class Block(object):
 
 
 if __name__ == '__main__':
-    ledger = Ledger(LEDGER_FILE)
-    ledger.update('hello', 'world')
-    ledger.update('hello', 'foo')
-    ledger.update('hello', 'you')
+    '''
+    You can run this file to write sample values to the ledger and
+    have the blockchain persisted as a json file.
+    '''
+    ledger = Ledger(BLOCKCHAIN_FILE)
+    # ledger.update('hello', 'world')
+    # ledger.update('hello', 'foo')
+    # ledger.update('hello', 'you')
     print ledger.blockchain_to_json()
     print ledger.values
