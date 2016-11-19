@@ -12,19 +12,24 @@ app = Flask(__name__)
 @click.option('--name', default='NavCanada', help='Flightplanning website name.')
 @click.option('--peer-address', default='http://127.0.0.1:8000', help='The URL of the peer to sync with.')
 def run(port, name, peer_address):
+    start(name, peer_address)
+    app.run(host='0.0.0.0', port=port, debug=False)
+
+
+def start(name, peer_address):
     global site_name
     global peer
     site_name = name
     peer = peer_address
-    app.run(host='0.0.0.0', port=port, debug=True)
+    return app
 
 
 @app.context_processor
-def inject_site():
+def inject_context():
     '''
-    Inject this into all the templates, so that we can style accordingly.
+    Inject the peer address and site name for the templates.
     '''
-    return dict(site=site_name)
+    return dict(site=site_name, peer=peer)
 
 
 @app.route('/')

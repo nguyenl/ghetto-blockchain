@@ -17,6 +17,11 @@ def start_peer(port, name, peer_address):
     '''
     Starts the ghetto-ledger peer service.
     '''
+    start(name, peer_address)
+    app.run(host='0.0.0.0', port=port, debug=False)
+
+
+def start(name, peer_address):
     ledger_filename = "{}.json".format(name)
     global ledger
     global peername
@@ -24,15 +29,18 @@ def start_peer(port, name, peer_address):
     peername = name
     ledger = Ledger(ledger_filename)
     peers = [peer_address]
-    app.run(host='0.0.0.0', port=port, debug=True)
-
+    return app
+    
 
 @app.route("/")
 def index():
     '''
     Displays the state of the key/value ledger.
     '''
-    return render_template('index.html', ledger=ledger.values, name=peername)
+    return render_template('index.html',
+                           ledger=ledger.values,
+                           blockchain=ledger.blockchain,
+                           name=peername)
 
 
 @app.route("/ledger.json")

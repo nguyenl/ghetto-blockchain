@@ -14,9 +14,17 @@
   <body>
     <div class="container">
       <div class="header clearfix">
+        <nav>
+          <ul class="nav nav-pills pull-right">
+            <li role="presentation"><a href="{{ peer }}">BlockChain Peer</a></li>
+          </ul>
+        </nav>
         <h3 class="text-muted">
           {% if site == "NavCanada" %}
           <img height=50 src="static/canada.png">
+          {% endif %}
+          {% if site == "FAA" %}
+          <img height=50 src="static/us.png">
           {% endif %}          
           {{ site }}
         </h3>
@@ -32,7 +40,7 @@
       </div>
 
       <footer class="footer">
-        <p>&copy; 2016 Company, Inc.</p>
+        <p>BlockChain Peer - {{ peer }}</p>
       </footer>
 
     </div> <!-- /container -->
