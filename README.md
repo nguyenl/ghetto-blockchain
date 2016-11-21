@@ -15,7 +15,9 @@ Be warned, I wanted to create this in a single work day, so it's not the prettie
 * Save arbitrary data to the database (the ledger).
 * Stores transaction history as a block chain.
 * Block chain ledger can be verified by the block chain.
-* Persists the ledger to the disk after each transaction (as a json file).
+* Persisting the ledger:
+ * In standalone mode, the blockchain can be persisted to disk as a json file.
+ * As a peer, the blockchain is persisted and read from a redis store.
 * RESTful API for viewing and updating the block chain.
 * Can syncrhonize between two separate block chain instances to act as a network.
 
@@ -26,4 +28,5 @@ Be warned, I wanted to create this in a single work day, so it's not the prettie
 * No security implmenetations
  * Traffic not encrypted
  * Identify of peers not secure
-
+* Peers cannot resolve a conflict automatically once a conflict occurs.
+* One peer cannot seed another peer that has just joined.
