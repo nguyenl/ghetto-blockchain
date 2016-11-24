@@ -117,7 +117,7 @@ def read_from_redis():
     '''
     Returns the blockchain from redis.
     '''
-    blockchain_json = redis_connection.get('blockchain')
+    blockchain_json = redis_connection.get(peername)
     if blockchain_json is not None:
         return json.loads(blockchain_json)
     else:
@@ -129,7 +129,7 @@ def write_to_redis(ledger):
     Given a ledger, write its blockchain to redis.
     '''
     blockchain_json = ledger.blockchain_to_json()
-    redis_connection.set('blockchain', blockchain_json)
+    redis_connection.set(peername, blockchain_json)
     
 
 def send_peers(endpoint, payload):
